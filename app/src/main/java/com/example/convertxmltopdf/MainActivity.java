@@ -1,14 +1,24 @@
 package com.example.convertxmltopdf;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.pdf.PdfDocument;
+import android.graphics.text.LineBreaker;
+import android.graphics.text.MeasuredText;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
@@ -16,6 +26,7 @@ import android.widget.Button;
 import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -33,9 +44,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //request permission
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_STORAGE);
         }
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+
 
         btnImport = (Button) findViewById(R.id.btnInput);
         btnImport.setOnClickListener(new View.OnClickListener() {
@@ -57,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //@RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(Build.VERSION.SDK_INT>=24){
@@ -73,24 +89,28 @@ public class MainActivity extends AppCompatActivity {
                 Uri uri = data.getData();
                 String path = uri.getPath();
                 path = path.substring(path.indexOf(":")+1);
-                Toast.makeText(this, path, Toast.LENGTH_SHORT).show();
-                Log.i("teste", path);
-                Log.i("result", readTextFile(path));
-            } catch (Exception e) {
+                Toast.makeText(this, path, Toast.LENGTH_LONG).show();
+                String textoXML = readTextFile(path);
+                createPdf(textoXML);
+
+            }catch (Exception e) {
                 e.printStackTrace();
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             }
         } else {
             Toast.makeText(this, "Ocorreu um erro ao selecionar o arquivo!", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private String readTextFile(String input) {
-        File file = new File(input);
+    private String readTextFile(String filePath) {
+        File file = new File(filePath);
         StringBuilder text = new StringBuilder();
         try{
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line;
+
             while ((line = br.readLine()) != null) {
+                Log.i("carambolas", line);
                 text.append(line).append("\n");
             }
             br.close();
@@ -111,4 +131,117 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    private void createPdf(String sometext){
+        // create a new document
+        PdfDocument document = new PdfDocument();
+        // crate a page description
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(300, 600, 1).create();
+        // start a page
+        PdfDocument.Page page = document.startPage(pageInfo);
+        Canvas canvas = page.getCanvas();
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        canvas.drawCircle(50, 50, 30, paint);
+        paint.setColor(Color.BLACK);
+        canvas.drawText(sometext, 80, 50, paint);
+        // finish the page
+        document.finishPage(page);
+        // write the document content
+        String directory_path = Environment.getExternalStorageDirectory().getPath();
+        //String directory_path = Environment.getExternalStorageDirectory().getPath() + "/mypdf/";
+        File file = new File(directory_path);
+        if (!file.exists()) {
+            file.mkdirs();
+        }else{
+            Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
+        }
+        String targetPdf = directory_path+"/test-2.pdf";
+        File filePath = new File(targetPdf);
+        try {
+            document.writeTo(new FileOutputStream(filePath));
+            Toast.makeText(this, "Done", Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Log.e("main", "error "+e.toString());
+            Toast.makeText(this, "Something wrong: " + e.toString(),  Toast.LENGTH_LONG).show();
+        }
+        // close the document
+        document.close();
+    }
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    public void createPDFTeste(String text){
+        PdfDocument document = new PdfDocument();
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(300, 600, 1).create();
+        PdfDocument.Page page = document.startPage(pageInfo);
+        Canvas canvas = page.getCanvas();
+
+
+        Paint paint = new Paint();
+        Paint bigPaint = new Paint();
+        bigPaint.setTextSize((float) (paint.getTextSize() * 2.0));
+        //String text = "Hello, Android.";
+
+        // Prepare the measured text
+        MeasuredText mt = new MeasuredText.Builder(text.toCharArray())
+                .appendStyleRun(paint, 7, false)  // Use paint for "Hello,
+                .appendStyleRun(bigPaint, 8, false)  // Use bigPaint for "Hello, "
+                .build();
+
+        LineBreaker lb = new LineBreaker.Builder()
+                // Use simple line breaker
+                .setBreakStrategy(LineBreaker.BREAK_STRATEGY_SIMPLE)
+                // Do not add hyphenation.
+                .setHyphenationFrequency(LineBreaker.HYPHENATION_FREQUENCY_NONE)
+                // Build the LineBreaker
+                .build();
+
+        LineBreaker.ParagraphConstraints c = new LineBreaker.ParagraphConstraints();
+        c.setWidth(240);  // Set the line wieth as 1024px
+
+        // Do the line breaking
+        LineBreaker.Result r = lb.computeLineBreaks(mt, c, 0);
+
+        // Compute the total height of the text.
+        int totalHeight = 0;
+        for (int i = 0; i < r.getLineCount(); ++i) {  // iterate over the lines
+            totalHeight += r.getLineDescent(i) - r.getLineAscent(i);
+        }
+
+        // Draw text to the canvas
+        Bitmap bmp = Bitmap.createBitmap(240, totalHeight, Bitmap.Config.ARGB_8888);
+        //Canvas c2 = new Canvas(bmp);
+        float yOffset = 0f;
+        int prevOffset = 0;
+        for (int i = 0; i < r.getLineCount(); ++i) {  // iterate over the lines
+            int nextOffset = r.getLineBreakOffset(i);
+            canvas.drawText(text, prevOffset, nextOffset, 0f, yOffset, paint);
+
+            prevOffset = nextOffset;
+            yOffset += r.getLineDescent(i) - r.getLineAscent(i);
+        }
+
+
+
+        document.finishPage(page);
+        // write the document content
+        String directory_path = Environment.getExternalStorageDirectory().getPath();
+        //String directory_path = Environment.getExternalStorageDirectory().getPath() + "/mypdf/";
+        File file = new File(directory_path);
+        if (!file.exists()) {
+            file.mkdirs();
+        }else{
+            Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
+        }
+        String targetPdf = directory_path+"/test-2.pdf";
+        File filePath = new File(targetPdf);
+        try {
+            document.writeTo(new FileOutputStream(filePath));
+            Toast.makeText(this, "Done", Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Log.e("main", "error "+e.toString());
+            Toast.makeText(this, "Something wrong: " + e.toString(),  Toast.LENGTH_LONG).show();
+        }
+        // close the document
+        document.close();
+    }
+
 }
