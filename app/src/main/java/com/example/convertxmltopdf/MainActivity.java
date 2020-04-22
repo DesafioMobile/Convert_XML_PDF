@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // mostra o nome do arquivo e exibe botão
                 lbFilename.setText(path.split("/")[path.split("/").length-1]);
-                btnExport.setVisibility(View.VISIBLE);
+                //btnExport.setVisibility(View.VISIBLE);
 
                 String textoXML = readTextFile(path);
                 createPdf(textoXML);
@@ -212,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             document.writeTo(new FileOutputStream(filePath));
             Toast.makeText(this, "Done", Toast.LENGTH_LONG).show();
+            openPDF(filePath);
         } catch (IOException e) {
             Log.e("main", "error "+e.toString());
             Toast.makeText(this, "Something wrong: " + e.toString(),  Toast.LENGTH_LONG).show();
@@ -295,5 +296,10 @@ public class MainActivity extends AppCompatActivity {
         // close the document
         document.close();
     }
-
+    public void openPDF(File filePath){
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(Uri.fromFile(filePath), "application/pdf");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(intent);
+    }
 }
