@@ -23,6 +23,7 @@ import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,8 +36,23 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_STORAGE = 1000;
     private static final int READ_REQUEST_CODE = 42;
+    private static final int WRITE_REQUEST_CODE = 43;
 
     Button btnImport;
+    Button btnExport;
+    TextView lbFilename;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if(requestCode == PERMISSION_REQUEST_STORAGE){
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                Toast.makeText(this, "Permissão concedida!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Permissão negada!", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,25 +67,52 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
 
-
-        btnImport = (Button) findViewById(R.id.btnInput);
+        btnImport = (Button) findViewById(R.id.btnImport);
         btnImport.setOnClickListener(new View.OnClickListener() {
             //static final int REQUEST_IMAGE_CAPTURE = 2;
             public void onClick(View view) {
                 selectFile();
             }
         });
+        lbFilename = (TextView) findViewById(R.id.lbFilename);
+        btnExport = (Button) findViewById(R.id.btnExport);
+        btnExport.setOnClickListener(new View.OnClickListener() {
+            //static final int REQUEST_IMAGE_CAPTURE = 2;
+            public void onClick(View view) {
+                createFile("application/pdf", "arquivo.pdf");
+            }
+        });
     }
 
     private void selectFile() {
         try {
-            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.setType("text/xml");
+            intent.setType("text/xml/*");
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivityForResult(Intent.createChooser(intent, "Selecione um arquivo XML"), READ_REQUEST_CODE);
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(),"Nenhum arquivo encontrado",Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void createFile(String mimeType, String fileName) {
+        try{
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+
+            // Filter to only show results that can be "opened", such as
+            // a file (as opposed to a list of contacts or timezones).
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+            // Create a file with the requested MIME type.
+            intent.setType(mimeType);
+            intent.putExtra(Intent.EXTRA_TITLE, fileName);
+            startActivityForResult(intent, WRITE_REQUEST_CODE);
+        } catch(Exception e) {
+            Toast.makeText(getApplicationContext(),"Erro ao salvar arquivo",Toast.LENGTH_LONG).show();
+        }
+
     }
 
     //@RequiresApi(api = Build.VERSION_CODES.Q)
@@ -89,10 +132,13 @@ public class MainActivity extends AppCompatActivity {
                 Uri uri = data.getData();
                 String path = uri.getPath();
                 path = path.substring(path.indexOf(":")+1);
-                Toast.makeText(this, path, Toast.LENGTH_LONG).show();
+
+                // mostra o nome do arquivo
+                lbFilename.setText(path.split("/")[path.split("/").length-1]);
+                btnExport.setVisibility(View.VISIBLE);
+
                 String textoXML = readTextFile(path);
                 createPdf(textoXML);
-
             }catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -108,9 +154,7 @@ public class MainActivity extends AppCompatActivity {
         try{
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line;
-
             while ((line = br.readLine()) != null) {
-                Log.i("carambolas", line);
                 text.append(line).append("\n");
             }
             br.close();
@@ -120,17 +164,6 @@ public class MainActivity extends AppCompatActivity {
         return text.toString();
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == PERMISSION_REQUEST_STORAGE){
-            if(grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                Toast.makeText(this, "Permissão concedida!", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "Permissão negada!", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
-    }
     private void createPdf(String sometext){
         // create a new document
         PdfDocument document = new PdfDocument();
