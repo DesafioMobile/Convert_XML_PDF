@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_STORAGE = 1000;
     private static final int READ_REQUEST_CODE = 42;
-    private static final int WRITE_REQUEST_CODE = 43;
+//    private static final int WRITE_REQUEST_CODE = 43;
 
     Button btnImport;
     Button btnExport;
