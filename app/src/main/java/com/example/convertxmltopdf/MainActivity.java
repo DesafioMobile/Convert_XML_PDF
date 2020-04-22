@@ -137,6 +137,8 @@ public class MainActivity extends AppCompatActivity {
                 String path = uri.getPath();
                 path = path.substring(path.indexOf(":")+1);
 
+                path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + path;
+
                 // mostra o nome do arquivo e exibe botão
                 lbFilename.setText(path.split("/")[path.split("/").length-1]);
                 btnExport.setVisibility(View.VISIBLE);
