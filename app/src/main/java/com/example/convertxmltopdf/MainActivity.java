@@ -64,8 +64,11 @@ public class MainActivity extends AppCompatActivity {
                 checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_STORAGE);
         }
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_STORAGE);
+        }
 
         btnImport = (Button) findViewById(R.id.btnImport);
         btnImport.setOnClickListener(new View.OnClickListener() {
@@ -76,17 +79,17 @@ public class MainActivity extends AppCompatActivity {
         });
         lbFilename = (TextView) findViewById(R.id.lbFilename);
         btnExport = (Button) findViewById(R.id.btnExport);
-        btnExport.setOnClickListener(new View.OnClickListener() {
-            //static final int REQUEST_IMAGE_CAPTURE = 2;
-            public void onClick(View view) {
-                createFile("application/pdf", "arquivo.pdf");
-            }
-        });
+//        btnExport.setOnClickListener(new View.OnClickListener() {
+//            //static final int REQUEST_IMAGE_CAPTURE = 2;
+//            public void onClick(View view) {
+//                createFile("application/pdf", "arquivo.pdf");
+//            }
+//        });
     }
 
     private void selectFile() {
         try {
-            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("text/xml/*");
             intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
@@ -97,23 +100,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void createFile(String mimeType, String fileName) {
-        try{
-            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-
-            // Filter to only show results that can be "opened", such as
-            // a file (as opposed to a list of contacts or timezones).
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-            // Create a file with the requested MIME type.
-            intent.setType(mimeType);
-            intent.putExtra(Intent.EXTRA_TITLE, fileName);
-            startActivityForResult(intent, WRITE_REQUEST_CODE);
-        } catch(Exception e) {
-            Toast.makeText(getApplicationContext(),"Erro ao salvar arquivo",Toast.LENGTH_LONG).show();
-        }
-
-    }
+//    private void createFile(String mimeType, String fileName) {
+//        try{
+//            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+//
+//            // Filter to only show results that can be "opened", such as
+//            // a file (as opposed to a list of contacts or timezones).
+//            intent.addCategory(Intent.CATEGORY_OPENABLE);
+//
+//            // Create a file with the requested MIME type.
+//            intent.setType(mimeType);
+//
+//            intent.putExtra(Intent.EXTRA_TITLE, fileName);
+//            startActivityForResult(intent, WRITE_REQUEST_CODE);
+//        } catch(Exception e) {
+//            Toast.makeText(getApplicationContext(),"Erro ao salvar arquivo",Toast.LENGTH_LONG).show();
+//        }
+//    }
 
     //@RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -133,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
                 String path = uri.getPath();
                 path = path.substring(path.indexOf(":")+1);
 
-                // mostra o nome do arquivo
+                // mostra o nome do arquivo e exibe botão
                 lbFilename.setText(path.split("/")[path.split("/").length-1]);
                 btnExport.setVisibility(View.VISIBLE);
 
