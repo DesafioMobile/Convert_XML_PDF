@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
+import android.text.TextPaint;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -83,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         btnExport.setOnClickListener(new View.OnClickListener() {
             //static final int REQUEST_IMAGE_CAPTURE = 2;
             public void onClick(View view) {
-                createFile("application/pdf", "arquivo.pdf");
+                //createFile("application/pdf", "arquivo.pdf");
             }
         });
     }
@@ -101,23 +102,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void createFile(String mimeType, String fileName) {
-        try{
-            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-
-            // Filter to only show results that can be "opened", such as
-            // a file (as opposed to a list of contacts or timezones).
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-            // Create a file with the requested MIME type.
-            intent.setType(mimeType);
-
-            intent.putExtra(Intent.EXTRA_TITLE, fileName);
-            startActivityForResult(intent, WRITE_REQUEST_CODE);
-        } catch(Exception e) {
-            Toast.makeText(getApplicationContext(),"Erro ao salvar arquivo",Toast.LENGTH_LONG).show();
-        }
-    }
+//    private void createFile(String mimeType, String fileName) {
+//        try{
+//            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+//
+//            // Filter to only show results that can be "opened", such as
+//            // a file (as opposed to a list of contacts or timezones).
+//            intent.addCategory(Intent.CATEGORY_OPENABLE);
+//
+//            // Create a file with the requested MIME type.
+//            intent.setType(mimeType);
+//
+//            intent.putExtra(Intent.EXTRA_TITLE, fileName);
+//            startActivityForResult(intent, WRITE_REQUEST_CODE);
+//        } catch(Exception e) {
+//            Toast.makeText(getApplicationContext(),"Erro ao salvar arquivo",Toast.LENGTH_LONG).show();
+//        }
+//    }
 
     //@RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -174,15 +175,23 @@ public class MainActivity extends AppCompatActivity {
         // create a new document
         PdfDocument document = new PdfDocument();
         // crate a page description
-        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(300, 600, 1).create();
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(900, 600, 1).create();
         // start a page
         PdfDocument.Page page = document.startPage(pageInfo);
         Canvas canvas = page.getCanvas();
         Paint paint = new Paint();
-        paint.setColor(Color.RED);
-        canvas.drawCircle(50, 50, 30, paint);
-        paint.setColor(Color.BLACK);
-        canvas.drawText(sometext, 80, 50, paint);
+//        paint.setColor(Color.RED);
+//       canvas.drawCircle(50, 50, 30, paint);
+//        paint.setColor(Color.BLACK);
+
+        int x = 50, y = 50;
+        TextPaint mTextPaint=new TextPaint();
+        for (String line: sometext.split("\n")) {
+            canvas.drawText(line, x, y, mTextPaint);
+            y += mTextPaint.descent() - mTextPaint.ascent();
+        }
+
+        //canvas.drawText(sometext, 80, 50, paint);
         // finish the page
         document.finishPage(page);
         // write the document content
