@@ -3,14 +3,12 @@ package com.example.convertxmltopdf;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.pdf.PdfDocument;
 import android.graphics.text.LineBreaker;
@@ -32,6 +30,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
 //    }
 
     //@RequiresApi(api = Build.VERSION_CODES.Q)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(Build.VERSION.SDK_INT>=24){
@@ -138,7 +139,10 @@ public class MainActivity extends AppCompatActivity {
                 String path = uri.getPath();
                 path = path.substring(path.indexOf(":")+1);
 
-                path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + path;
+                Path p = FileSystems.getDefault().getPath(path);
+                if (!p.isAbsolute()) {
+                    path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + path;
+                }
 
                 // mostra o nome do arquivo e exibe botão
                 lbFilename.setText(path.split("/")[path.split("/").length-1]);
