@@ -79,12 +79,13 @@ public class MainActivity extends AppCompatActivity {
         });
         lbFilename = (TextView) findViewById(R.id.lbFilename);
         btnExport = (Button) findViewById(R.id.btnExport);
-//        btnExport.setOnClickListener(new View.OnClickListener() {
-//            //static final int REQUEST_IMAGE_CAPTURE = 2;
-//            public void onClick(View view) {
-//                createFile("application/pdf", "arquivo.pdf");
-//            }
-//        });
+        
+        btnExport.setOnClickListener(new View.OnClickListener() {
+            //static final int REQUEST_IMAGE_CAPTURE = 2;
+            public void onClick(View view) {
+                createFile("application/pdf", "arquivo.pdf");
+            }
+        });
     }
 
     private void selectFile() {
@@ -100,23 +101,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//    private void createFile(String mimeType, String fileName) {
-//        try{
-//            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-//
-//            // Filter to only show results that can be "opened", such as
-//            // a file (as opposed to a list of contacts or timezones).
-//            intent.addCategory(Intent.CATEGORY_OPENABLE);
-//
-//            // Create a file with the requested MIME type.
-//            intent.setType(mimeType);
-//
-//            intent.putExtra(Intent.EXTRA_TITLE, fileName);
-//            startActivityForResult(intent, WRITE_REQUEST_CODE);
-//        } catch(Exception e) {
-//            Toast.makeText(getApplicationContext(),"Erro ao salvar arquivo",Toast.LENGTH_LONG).show();
-//        }
-//    }
+    private void createFile(String mimeType, String fileName) {
+        try{
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+
+            // Filter to only show results that can be "opened", such as
+            // a file (as opposed to a list of contacts or timezones).
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+            // Create a file with the requested MIME type.
+            intent.setType(mimeType);
+
+            intent.putExtra(Intent.EXTRA_TITLE, fileName);
+            startActivityForResult(intent, WRITE_REQUEST_CODE);
+        } catch(Exception e) {
+            Toast.makeText(getApplicationContext(),"Erro ao salvar arquivo",Toast.LENGTH_LONG).show();
+        }
+    }
 
     //@RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
